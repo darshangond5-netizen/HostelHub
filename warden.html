@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Warden Dashboard – HostelHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --primary: #6a11cb;
+      --secondary: #2575fc;
+      --accent: #f7b731;
+      --light: #f6f8ff;
+      --card: #ffffff;
+      --text-dark: #222;
+      --text-light: #666;
+      --radius: 16px;
+      --shadow: 0 8px 28px rgba(0,0,0,0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 25px;
+      background: var(--light);
+      font-family: "Poppins", sans-serif;
+    }
+
+    /* LOGIN SCREEN */
+    #loginScreen {
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-box {
+      background: white;
+      padding: 40px;
+      width: 360px;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    #loginScreen h2 {
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: #222;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 14px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(90deg, #2b0f9b, #1467f1);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    /* DASHBOARD */
+    #dashboard { display: none; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      font-size: 1.7rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logout-btn {
+      padding: 10px 18px;
+      border-radius: 50px;
+      border: none;
+      background: #ff4d4d;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .title {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #dcdfe6;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+
+    .complaint {
+      padding: 14px;
+      background: #fafbff;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .complaint:hover { transform: scale(1.02); }
+
+    .status-tag {
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-block;
+      margin-top: 6px;
+    }
+
+    .open { background: #ffe8e8; color: #b30000; }
+    .progress { background: #fff3c6; color: #8d6a00; }
+    .resolved { background: #dbffe5; color: #008f43; }
+
+    .detail-box {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #dcdfe6;
+      resize: vertical;
+    }
+
+    .btn-update {
+      padding: 12px;
+      border-radius: 50px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      color: white;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .delete-icon {
+      background: #ff4d4d;
+      color: white;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .delete-icon:hover {
+      background: #e03b3b;
+      transform: scale(1.1);
+    }
+
+    .comment {
+      padding: 10px;
+      background: #f3f4ff;
+      border-left: 4px solid var(--secondary);
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+
+    #dImage {
+      max-width: 200px;
+      border-radius: 12px;
+      margin-top: 10px;
+      display:none;
+      cursor:pointer;
+      border:1px solid #ddd;
+    }
+
+    /* ANALYTICS SECTION */
+    #analyticsCard {
+      margin-top: 25px;
+      grid-column: 1 / span 2;
+    }
+
+    .statBox {
+      font-size: 1.3rem;
+      font-weight: 700;
+      padding: 15px;
+      background: #eef2ff;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .smallChartBox { max-width: 200px; height: 50px; margin: auto; }
+    .smallChartBox canvas { width:100% !important; height:100% !important; display:block; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .grid { grid-template-columns: 1fr; }
+        #analyticsCard { grid-column: 1; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>Warden Login</h2>
+
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button id="loginBtn">Login</button>
+    <div id="error" class="error"></div>
+  </div>
+</div>
+
+<div id="dashboard">
+
+  <div class="header">
+    <div class="logo">HostelHub – Warden Dashboard</div>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="title">Filters</div>
+
+      <select id="filterStatus">
+        <option value="">All Status</option>
+        <option value="Open">Open</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Resolved">Resolved</option>
+      </select>
+
+      <select id="filterCategory">
+        <option value="">All Categories</option>
+        <option>Plumbing</option>
+        <option>Electrical</option>
+        <option>Mess</option>
+        <option>Internet</option>
+        <option>Room Furniture</option>
+        <option>Other</option>
+      </select>
+
+      <div class="title">All Complaints</div>
+      <div id="complaintList"></div>
+    </div>
+
+    <div class="card">
+      <div class="title">Complaint Details</div>
+
+      <div id="details" class="detail-box">
+
+        <div><strong>Student:</strong> <span id="dStudent"></span></div>
+        <div><strong>Category:</strong> <span id="dCategory"></span></div>
+        <div><strong>Title:</strong> <span id="dTitle"></span></div>
+        <div><strong>Description:</strong> <span id="dDesc"></span></div>
+        <div><strong>Created At:</strong> <span id="dDate"></span></div>
+
+        <div><strong>Image:</strong></div>
+        <img id="dImage" src="" alt="Image">
+
+        <label><strong>Status</strong></label>
+        <select id="updateStatus">
+          <option>Open</option>
+          <option>In Progress</option>
+          <option>Resolved</option>
+        </select>
+
+        <label><strong>Add Comment</strong></label>
+        <textarea id="newComment" placeholder="Type a message..."></textarea>
+
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="btn-update" id="saveBtn">Update</button>
+          <button id="deleteBtn" class="delete-icon">🗑</button>
+        </div>
+
+        <h3>Comments</h3>
+        <div id="commentsBox"></div>
+
+      </div>
+
+      <div id="noSelection" style="color:#666;font-size:1rem;">
+        Select a complaint to view details.
+      </div>
+    </div>
+  </div>
+
+  <div id="analyticsCard" class="card">
+    <div class="title">Analytics</div>
+
+    <div id="avgTimeBox" class="statBox">Average Resolution Time: -- hrs</div>
+
+    <div class="smallChartBox">
+      <canvas id="categoryChart"></canvas>
+    </div>
+    <br>
+    <div class="smallChartBox">
+      <canvas id="statusChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  import {
+    getFirestore,
+    collection,
+    onSnapshot,
+    doc,
+    updateDoc,
+    deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyABEsCXg5z-obv3zIYziyTzqvwRQ3ImLaU",
+    authDomain: "hostel-hub-c9077.firebaseapp.com",
+    projectId: "hostel-hub-c9077",
+    storageBucket: "hostel-hub-c9077.firebasestorage.app",
+    messagingSenderId: "149958784110",
+    appId: "1:149958784110:web:627028d869fda6979a627f",
+    measurementId: "G-JL9T9LJSGN"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /* ---------------- AUTH ---------------- */
+
+  const loginBtn = document.getElementById("loginBtn");
+  const loginScreen = document.getElementById("loginScreen");
+  const dashboard = document.getElementById("dashboard");
+
+  loginBtn.onclick = () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+      document.getElementById("error").innerText = "Enter email and password.";
+      return;
+    }
+    document.getElementById("error").innerText = "";
+
+    signInWithEmailAndPassword(auth, email, password)
+      .catch(err => {
+        document.getElementById("error").innerText = err.message;
+      });
+  };
+
+  document.getElementById("logoutBtn").onclick = () => signOut(auth);
+
+  /* ---------------- FIRESTORE REALTIME ---------------- */
+
+  let complaints = [];
+  let unsubscribeSnapshot = null;
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginScreen.style.display = "none";
+      dashboard.style.display = "block";
+
+      if (!unsubscribeSnapshot) {
+        unsubscribeSnapshot = onSnapshot(collection(db, "complaints"), (snapshot) => {
+          complaints = snapshot.docs.map(d => ({ _docId: d.id, ...d.data() }));
+          renderList();
+          updateAnalytics();
+        });
+      }
+
+    } else {
+      loginScreen.style.display = "flex";
+      dashboard.style.display = "none";
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+    }
+  });
+
+  /* ---------------- RENDER LIST ---------------- */
+
+  const listBox = document.getElementById("complaintList");
+  const filterStatus = document.getElementById("filterStatus");
+  const filterCategory = document.getElementById("filterCategory");
+
+  function renderList() {
+    listBox.innerHTML = "";
+
+    complaints.forEach((c, idx) => {
+      if (filterStatus.value && c.status !== filterStatus.value) return;
+      if (filterCategory.value && c.category !== filterCategory.value) return;
+
+      const div = document.createElement("div");
+      div.className = "complaint";
+      div.innerHTML = `
+        <div><strong>${escapeHtml(c.title)}</strong></div>
+        <div style="font-size:0.9rem;color:#666">${escapeHtml(c.category)} • ${escapeHtml(c.createdAt)}</div>
+        <div class="status-tag ${c.status === 'Open' ? 'open' :
+          c.status === 'In Progress' ? 'progress' : 'resolved'}">${escapeHtml(c.status)}</div>
+      `;
+      div.onclick = () => openDetails(idx);
+      listBox.appendChild(div);
+    });
+
+    if (!listBox.hasChildNodes()) {
+      listBox.innerHTML = "<div style='color:#777'>No complaints found</div>";
+    }
+  }
+
+  /* ---------------- OPEN DETAILS ---------------- */
+
+  function openDetails(i) {
+    const c = complaints[i] || {};
+
+    document.getElementById("dStudent").innerText = c.studentId || c.id || "";
+    document.getElementById("dCategory").innerText = c.category || "";
+    document.getElementById("dTitle").innerText = c.title || "";
+    document.getElementById("dDesc").innerText = c.description || "";
+    document.getElementById("dDate").innerText = c.createdAt || "";
+    document.getElementById("updateStatus").value = c.status || "Open";
+
+    const imgEl = document.getElementById("dImage");
+    if (c.image) {
+      imgEl.src = c.image;
+      imgEl.style.display = "block";
+      imgEl.onclick = () => window.open(c.image, "_blank");
+    } else {
+      imgEl.style.display = "none";
+    }
+
+    renderComments(i);
+
+    document.getElementById("details").style.display = "flex";
+    document.getElementById("noSelection").style.display = "none";
+
+    document.getElementById("saveBtn").onclick = () => saveChanges(i);
+    document.getElementById("deleteBtn").onclick = () => deleteComplaint(i);
+  }
+
+  function renderComments(i) {
+    const box = document.getElementById("commentsBox");
+    box.innerHTML = "";
+    const c = complaints[i];
+    c.comments = c.comments || [];
+
+    c.comments.forEach(msg => {
+      const div = document.createElement("div");
+      div.className = "comment";
+      div.innerText = msg;
+      box.appendChild(div);
+    });
+
+    if (c.comments.length === 0) {
+      box.innerHTML = "<div style='color:#777'>No comments yet</div>";
+    }
+  }
+
+  /* ---------------- UPDATE / DELETE ---------------- */
+
+  async function saveChanges(i) {
+    const c = complaints[i];
+    if (!c || !c._docId) return;
+
+    const newStatus = document.getElementById("updateStatus").value;
+    const comment = document.getElementById("newComment").value.trim();
+
+    const updates = { status: newStatus };
+
+    if (newStatus === "Resolved" && !c.resolvedAt) {
+      updates.resolvedAt = new Date().toISOString();
+    }
+
+    if (comment) {
+      const updatedComments = c.comments ? [...c.comments, "Warden: " + comment] : ["Warden: " + comment];
+      updates.comments = updatedComments;
+    }
+
+    await updateDoc(doc(db, "complaints", c._docId), updates);
+
+    document.getElementById("newComment").value = "";
+    alert("Complaint updated ✔");
+  }
+
+  async function deleteComplaint(i) {
+    const c = complaints[i];
+    if (!c._docId) return;
+    if (!confirm("Delete this complaint?")) return;
+
+    await deleteDoc(doc(db, "complaints", c._docId));
+
+    document.getElementById("details").style.display = "none";
+    document.getElementById("noSelection").style.display = "block";
+    alert("Complaint deleted ✔");
+  }
+
+  filterStatus.onchange = filterCategory.onchange = renderList;
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+  }
+
+  /* ---------------- ANALYTICS ---------------- */
+
+  let categoryChart;
+  let statusChart;
+
+  function updateAnalytics() {
+    const categoryCounts = {
+      "Plumbing": 0,
+      "Electrical": 0,
+      "Mess": 0,
+      "Internet": 0,
+      "Room Furniture": 0,
+      "Other": 0
+    };
+
+    const statusCounts = {
+      "Open": 0,
+      "In Progress": 0,
+      "Resolved": 0
+    };
+
+    let totalHours = 0;
+    let resolvedCount = 0;
+
+    complaints.forEach(c => {
+      // category - FIXED HERE
+      if (categoryCounts[c.category] !== undefined) {
+        categoryCounts[c.category]++;
+      }
+
+      // status
+      if (statusCounts[c.status] !== undefined) {
+        statusCounts[c.status]++;
+      }
+
+      // avg resolution time
+      if (c.resolvedAt) {
+        const created = new Date(c.createdAt);
+        const resolved = new Date(c.resolvedAt);
+        const diffHours = Math.abs(resolved - created) / 36e5;
+        totalHours += diffHours;
+        resolvedCount++;
+      }
+    });
+
+    const avg = resolvedCount > 0 ? (totalHours / resolvedCount).toFixed(1) : "--";
+    document.getElementById("avgTimeBox").innerText =
+      Average Resolution Time: ${avg} hrs;
+
+    renderCategoryChart(categoryCounts);
+    renderStatusChart(statusCounts);
+  }
+
+  function renderCategoryChart(data) {
+    const ctx = document.getElementById("categoryChart");
+
+    if (categoryChart) categoryChart.destroy();
+
+    categoryChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: Object.keys(data),
+        datasets: [{
+          data: Object.values(data),
+          backgroundColor: ["#6a11cb", "#2575fc", "#f7b731", "#ff6b6b", "#4bc0c0", "#999999"]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: true } }
+      }
+    });
+  }
+
+  function renderStatusChart(data) {
+    const ctx = document.getElementById("statusChart");
+
+    if (statusChart) statusChart.destroy();
+
+    statusChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: Object.keys(data),
+        datasets: [{
+          data: Object.values(data),
+          backgroundColor: ["#ff6b6b", "#f7b731", "#4bc0c0"]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: true } }
+      }
+    });
+  }
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Portal – HostelHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --primary: #6a11cb;
+      --secondary: #2575fc;
+      --bg: #f6f8ff;
+      --card: #fff;
+      --shadow: 0 8px 30px rgba(0,0,0,0.10);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0; padding: 25px;
+      background: var(--bg); font-family: "Poppins", sans-serif;
+    }
+
+    /* USN Page (Login Style) */
+    #usnPage {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg); z-index: 100;
+      display: flex; justify-content: center; align-items: center;
+    }
+    
+    .usn-card {
+      background: white; padding: 40px; border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15); text-align: center;
+      max-width: 400px; width: 100%;
+    }
+
+    .usn-input {
+      width: 100%; padding: 14px; border: 2px solid #eee;
+      border-radius: 10px; font-size: 1.1rem; text-align: center;
+      margin-bottom: 20px; transition: 0.3s; outline: none;
+    }
+    .usn-input:focus { border-color: var(--primary); }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .logo {
+      font-size: 1.6rem; font-weight: 800;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .back-btn {
+      padding: 8px 16px; border-radius: 50px; background: #fff;
+      border: 1px solid #ddd; cursor: pointer; text-decoration: none;
+      font-weight: 600; color: #222;
+    }
+
+    /* Dashboard */
+    #dashboard { display: none; gap: 20px; grid-template-columns: 360px 1fr; }
+    
+    .card { background: var(--card); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .title { font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; }
+
+    input, select, textarea {
+      width: 100%; padding: 12px; border-radius: 12px;
+      border: 1px solid #dcdfe6; margin-bottom: 12px; font-size: 0.95rem;
+    }
+    textarea { height: 100px; resize: vertical; }
+
+    .btn {
+      padding: 12px; border-radius: 50px; border: none; width: 100%;
+      cursor: pointer; font-weight: 700; transition: 0.25s;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      color: white; font-size: 1rem;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(106, 17, 203, 0.3); }
+
+    /* Complaint Item */
+    .complaint-item {
+      background: #fafbff; padding: 16px; border-radius: 12px;
+      border: 1px solid #eee; margin-bottom: 12px;
+    }
+    .status-tag {
+      padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+      display: inline-block; margin-top: 5px; text-transform: uppercase;
+    }
+    .st-Open { background: #ffe8e8; color: #d32f2f; }
+    .st-InProgress { background: #fff8e1; color: #fbc02d; }
+    .st-Resolved { background: #e8f5e9; color: #388e3c; }
+
+    /* Analytics */
+    #analyticsCard {
+      margin-top: 25px;
+      grid-column: 1 / span 2;
+    }
+
+    .statBox {
+      font-size: 1.2rem;
+      font-weight: 700;
+      padding: 12px;
+      background: #eef2ff;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* small chart containers */
+    .smallChartBox { max-width: 200px; height: 50px; margin: auto; }
+    .smallChartBox canvas { width:100% !important; height:100% !important; display:block; }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- USN LOGIN PAGE -->
+  <div id="usnPage">
+    <div class="usn-card">
+      <h2 style="margin-bottom:10px; color:#333;">Student Portal</h2>
+      <p style="color:#666; margin-bottom:30px;">Enter your USN to access the dashboard</p>
+      
+      <input type="text" id="usnInput" class="usn-input" placeholder="e.g. 4CB20CS001" autocomplete="off">
+      <button class="btn btn-primary" id="btnEnter">Enter Dashboard</button>
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD -->
+  <div id="mainContent" style="display:none;">
+    
+    <div class="header">
+      <div class="logo">HostelHub</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span id="displayUSN" style="font-weight:600; color:#555;"></span>
+        <button id="btnLogout" class="back-btn">Logout</button>
+      </div>
+    </div>
+
+    <div id="dashboard" class="grid">
+      <div class="card">
+        <div class="title">📝 Report Issue</div>
+        <select id="category">
+          <option>Plumbing</option>
+          <option>Electrical</option>
+          <option>Mess / Food</option>
+          <option>Wi-Fi / Internet</option>
+          <option>Furniture</option>
+          <option>Cleaning</option>
+          <option>Other</option>
+        </select>
+        <input id="titleInput" placeholder="Issue Title (e.g. Fan not working)">
+        <textarea id="descInput" placeholder="Describe the issue details..."></textarea>
+        
+        <label style="font-size:0.9rem; font-weight:600; color:#555;">Attach Photo (Optional)</label>
+        <input type="file" id="imageInput" accept="image/*">
+        
+        <button class="btn btn-primary" id="submitBtn">Submit Complaint</button>
+        <div id="submitStatus" style="margin-top:15px; text-align:center; font-size:0.9rem;"></div>
+      </div>
+
+      <div class="card">
+        <div class="title">🕒 Your History</div>
+        <div id="historyList">
+          <p style="color:#888; text-align:center;">Loading records...</p>
+        </div>
+      </div>
+
+      <!-- STUDENT ANALYTICS -->
+      <div id="analyticsCard" class="card">
+        <div class="title">📊 Your Analytics</div>
+
+        <div id="totalComplaintsBox" class="statBox">Total Complaints: --</div>
+        <div id="resolvedComplaintsBox" class="statBox">Resolved: --</div>
+        <div id="pendingComplaintsBox" class="statBox">Pending: --</div>
+
+        <div class="smallChartBox">
+          <canvas id="categoryChart"></canvas>
+        </div>
+
+        <br>
+
+        <div class="smallChartBox">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- FIREBASE + LOGIC -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyABEsCXg5z-obv3zIYziyTzqvwRQ3ImLaU",
+      authDomain: "hostel-hub-c9077.firebaseapp.com",
+      projectId: "hostel-hub-c9077",
+      storageBucket: "hostel-hub-c9077.firebasestorage.app",
+      messagingSenderId: "149958784110",
+      appId: "1:149958784110:web:627028d869fda6979a627f",
+      measurementId: "G-JL9T9LJSGN"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let currentUSN = null;
+    let categoryChart, statusChart;
+
+    /* ---------------- USN LOGIN ---------------- */
+    const usnPage = document.getElementById("usnPage");
+    const mainContent = document.getElementById("mainContent");
+    const dashboard = document.getElementById("dashboard");
+    const usnInput = document.getElementById("usnInput");
+    const displayUSN = document.getElementById("displayUSN");
+
+    if(localStorage.getItem("hh_student_usn")) {
+      login(localStorage.getItem("hh_student_usn"));
+    }
+
+    document.getElementById("btnEnter").onclick = () => {
+      const val = usnInput.value.trim().toUpperCase();
+      if(!val) return alert("Please enter your USN");
+      login(val);
+    };
+
+    document.getElementById("btnLogout").onclick = () => {
+      localStorage.removeItem("hh_student_usn");
+      location.reload();
+    };
+
+    function login(usn) {
+      currentUSN = usn;
+      localStorage.setItem("hh_student_usn", usn);
+
+      usnPage.style.display = "none";
+      mainContent.style.display = "block";
+      dashboard.style.display = "grid";
+      displayUSN.innerText = "USN: " + usn;
+
+      loadRealtimeHistory();
+    }
+
+    /* ---------------- SUBMIT COMPLAINT ---------------- */
+    document.getElementById("submitBtn").onclick = async () => {
+      const cat = document.getElementById("category").value;
+      const title = document.getElementById("titleInput").value.trim();
+      const desc = document.getElementById("descInput").value.trim();
+      const fileInput = document.getElementById("imageInput");
+      const statusDiv = document.getElementById("submitStatus");
+
+      if(!title || !desc) return alert("Please fill in Title and Description");
+
+      statusDiv.innerHTML = "<span style='color:#666'>Submitting...</span>";
+
+      let imgBase64 = "";
+      if(fileInput.files[0]) {
+        imgBase64 = await toBase64(fileInput.files[0]);
+      }
+
+      try {
+        await addDoc(collection(db, "complaints"), {
+          studentId: currentUSN,
+          category: cat,
+          title: title,
+          description: desc,
+          image: imgBase64,
+          status: "Open",
+          comments: [],
+          createdAt: new Date().toISOString()
+        });
+
+        statusDiv.innerHTML = "<span style='color:green; font-weight:bold;'>Complaint Sent! ✔</span>";
+        document.getElementById("titleInput").value = "";
+        document.getElementById("descInput").value = "";
+        document.getElementById("imageInput").value = "";
+        setTimeout(() => statusDiv.innerText = "", 3000);
+
+      } catch(e) {
+        statusDiv.innerText = "Error: " + e.message;
+      }
+    };
+
+    function toBase64(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* ---------------- HISTORY + ANALYTICS ---------------- */
+    function loadRealtimeHistory() {
+      const list = document.getElementById("historyList");
+      const q = query(collection(db, "complaints"), where("studentId", "==", currentUSN));
+
+      onSnapshot(q, (snapshot) => {
+        list.innerHTML = "";
+        if(snapshot.empty) {
+          list.innerHTML = "<p style='text-align:center; color:#999; margin-top:20px;'>No complaints yet.</p>";
+          updateAnalytics([]);
+          return;
+        }
+
+        const docs = [];
+        snapshot.forEach(d => docs.push(d.data()));
+        docs.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        docs.forEach(c => {
+          const div = document.createElement("div");
+          div.className = "complaint-item";
+
+          const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleDateString() : "N/A";
+          const statusClass = c.status.replace(" ", "");
+
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between;">
+                <strong>${c.title}</strong>
+                <span class="status-tag st-${statusClass}">${c.status}</span>
+            </div>
+            <div style="font-size:0.85rem; color:#666; margin-top:5px;">
+                ${c.category} • ${dateStr}
+            </div>
+            ${c.comments && c.comments.length > 0 ? 
+              `<div style="margin-top:8px; font-size:0.8rem; background:#f0f0f0; padding:6px; border-radius:6px;">
+                 💬 Latest: ${c.comments[c.comments.length-1]}
+               </div>` : '' }
+          `;
+          list.appendChild(div);
+        });
+
+        updateAnalytics(docs);
+      });
+    }
+
+    /* ---------------- ANALYTICS CALCULATION ---------------- */
+    function updateAnalytics(docs) {
+      const total = docs.length;
+      const resolved = docs.filter(d => d.status === "Resolved").length;
+      const pending = docs.filter(d => d.status !== "Resolved").length;
+
+      document.getElementById("totalComplaintsBox").innerText = Total Complaints: ${total};
+      document.getElementById("resolvedComplaintsBox").innerText = Resolved: ${resolved};
+      document.getElementById("pendingComplaintsBox").innerText = Pending: ${pending};
+
+      const categoryCounts = {};
+      const statusCounts = { "Open": 0, "In Progress": 0, "Resolved": 0 };
+
+      docs.forEach(c => {
+        categoryCounts[c.category] = (categoryCounts[c.category] || 0) + 1;
+        if(statusCounts[c.status] !== undefined) statusCounts[c.status]++;
+      });
+
+      renderCategoryChart(categoryCounts);
+      renderStatusChart(statusCounts);
+    }
+
+    /* ---------------- CATEGORY CHART ---------------- */
+    function renderCategoryChart(data) {
+      const ctx = document.getElementById("categoryChart");
+
+      if(categoryChart) categoryChart.destroy();
+
+      categoryChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            data: Object.values(data),
+            backgroundColor: ["#6a11cb", "#2575fc", "#f7b731", "#ff6b6b", "#4bc0c0", "#999999"]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          }
+        }
+      });
+    }
+
+    /* ---------------- STATUS CHART ---------------- */
+    function renderStatusChart(data) {
+      const ctx = document.getElementById("statusChart");
+
+      if(statusChart) statusChart.destroy();
+
+      statusChart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            data: Object.values(data),
+            backgroundColor: ["#ff6b6b", "#f7b731", "#4bc0c0"]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          }
+        }
+      });
+    }
+
+  </script>
+
+</body>
+</html>
